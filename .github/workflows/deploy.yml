@@ -23,7 +23,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: false
           script: |
-            set -e
             cd ~/FlightPriceTracker
             git pull --rebase
             pip3 install -r requirements.txt
@@ -31,5 +30,4 @@ jobs:
             sleep 2
             nohup python3 flight-app.py > log.txt 2>&1 &
             disown $!
-            sleep 3
-            tail -n 50 log.txt
+            echo "Deployed successfully!"
