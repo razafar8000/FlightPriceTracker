@@ -21,8 +21,15 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          request_pty: true
           script: |
             set -e
             cd ~/FlightPriceTracker
-            ./run.sh
+            git pull --rebase
+            pip3 install -r requirements.txt
+            pkill -f "python3 flight-app.py" || true
+            sleep 2
+            nohup python3 flight-app.py > log.txt 2>&1 &
+            disown
+            sleep 3
             tail -n 50 log.txt
