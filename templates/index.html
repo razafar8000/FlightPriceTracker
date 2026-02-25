@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyDeal — Flight Price Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --sky: #0a1628;
+            --mid: #0d2044;
+            --accent: #00d4ff;
+            --gold: #f5c842;
+            --card: #0f2347;
+            --border: rgba(0, 212, 255, 0.15);
+            --text: #e8f4ff;
+            --muted: #6b8cae;
+        }
+
+        body {
+            background: var(--sky);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Starfield background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+                radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
+                radial-gradient(1px 1px at 50% 70%, rgba(255,255,255,0.35) 0%, transparent 100%),
+                radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.25) 0%, transparent 100%),
+                radial-gradient(1px 1px at 70% 50%, rgba(255,255,255,0.3) 0%, transparent 100%),
+                radial-gradient(1px 1px at 35% 15%, rgba(255,255,255,0.4) 0%, transparent 100%),
+                radial-gradient(1px 1px at 90% 85%, rgba(255,255,255,0.25) 0%, transparent 100%),
+                radial-gradient(1px 1px at 45% 90%, rgba(255,255,255,0.3) 0%, transparent 100%),
+                radial-gradient(2px 2px at 65% 35%, rgba(0, 212, 255, 0.2) 0%, transparent 100%),
+                radial-gradient(2px 2px at 15% 55%, rgba(0, 212, 255, 0.15) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            position: relative;
+            z-index: 1;
+            padding: 40px 40px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 52px;
+            letter-spacing: 3px;
+            color: var(--accent);
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .logo-sub {
+            font-size: 13px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 300;
+        }
+
+        .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 60px 20px 50px;
+        }
+
+        .hero h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(42px, 8vw, 96px);
+            letter-spacing: 4px;
+            line-height: 0.95;
+            color: #fff;
+            text-shadow: 0 0 60px rgba(0, 212, 255, 0.2);
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero p {
+            margin-top: 16px;
+            font-size: 15px;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        /* Search bar */
+        .search-section {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            padding: 0 20px 60px;
+        }
+
+        .search-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,212,255,0.05);
+        }
+
+        .search-box label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .budget-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .budget-wrapper span {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 22px;
+            color: var(--accent);
+            font-weight: 300;
+            pointer-events: none;
+        }
+
+        #budget {
+            width: 100%;
+            background: rgba(0,212,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 18px 16px 40px;
+            font-size: 24px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            color: #fff;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        #budget:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+        }
+
+        #budget::placeholder { color: var(--muted); font-size: 18px; }
+
+        #searchBtn {
+            background: var(--accent);
+            color: var(--sky);
+            border: none;
+            border-radius: 12px;
+            padding: 16px 28px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+            white-space: nowrap;
+        }
+
+        #searchBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,212,255,0.4);
+        }
+
+        #searchBtn:active { transform: translateY(0); }
+
+        .range-row {
+            margin-top: 16px;
+        }
+
+        #budgetRange {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--accent) 0%, var(--border) 0%);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #budgetRange::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 10px rgba(0,212,255,0.6);
+            cursor: pointer;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* Results */
+        .results-section {
+            position: relative;
+            z-index: 1;
+            padding: 0 40px 80px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s, transform 0.4s;
+        }
+
+        .results-header.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .results-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 2px;
+            color: var(--text);
+        }
+
+        .count-badge {
+            background: var(--accent);
+            color: var(--sky);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .no-results .plane-icon {
+            font-size: 64px;
+            opacity: 0.2;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .no-results p {
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        /* Flight cards grid */
+        #flightGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        .flight-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .flight-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .flight-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .flight-card:hover {
+            border-color: rgba(0,212,255,0.35);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(0,212,255,0.08);
+            transform: translateY(-3px);
+        }
+
+        .flight-card:hover::before { opacity: 1; }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .airline-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .airline-logo-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.07);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .airline-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 6px;
+        }
+
+        .airline-initials {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            color: var(--accent);
+            letter-spacing: 1px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .airline-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .flight-class {
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .price-tag {
+            text-align: right;
+        }
+
+        .price-amount {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 38px;
+            color: var(--gold);
+            line-height: 1;
+            letter-spacing: 1px;
+        }
+
+        .price-label {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .route {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .city {
+            flex: 1;
+        }
+
+        .city-code {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            color: #fff;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .city-full {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .city.dest { text-align: right; }
+
+        .route-line {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .route-line .plane-svg {
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        .route-dash {
+            width: 100%;
+            height: 1px;
+            background: var(--border);
+            position: relative;
+        }
+
+        .route-dash::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: -1px;
+            width: 40%;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .flight-meta {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .meta-item {
+            text-align: center;
+        }
+
+        .meta-val {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .meta-key {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .book-btn {
+            margin-top: 18px;
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px;
+            color: var(--accent);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .book-btn:hover {
+            background: rgba(0,212,255,0.1);
+            border-color: var(--accent);
+        }
+
+        /* Loading */
+        #loadingSpinner {
+            display: none;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            header { padding: 24px 24px 0; }
+            .results-section { padding: 0 16px 60px; }
+            .search-box { padding: 24px 20px; }
+            .logo { font-size: 38px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">SkyDeal</div>
+        <div class="logo-sub">Flight Price Tracker</div>
+    </header>
+
+    <div class="hero">
+        <h1>FLY MORE,<br>SPEND <span>LESS</span></h1>
+        <p>Enter your budget — we'll find every flight you can afford</p>
+    </div>
+
+    <div class="search-section">
+        <div class="search-box">
+            <label>Your Maximum Budget (USD)</label>
+            <div class="input-row">
+                <div class="budget-wrapper">
+                    <span>$</span>
+                    <input type="number" id="budget" placeholder="e.g. 250" min="0" max="1000">
+                </div>
+                <button id="searchBtn">Search Flights</button>
+            </div>
+            <div class="range-row">
+                <input type="range" id="budgetRange" min="0" max="600" value="0" step="10">
+                <div class="range-labels"><span>$0</span><span>$300</span><span>$600</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-section">
+        <div id="resultsHeader" class="results-header">
+            <h2>Available Flights</h2>
+            <span class="count-badge" id="countBadge">0 found</span>
+        </div>
+
+        <div id="loadingSpinner"><div class="spinner"></div></div>
+        <div id="flightGrid"></div>
+        <div id="noResults" style="display:none;" class="no-results">
+            <span class="plane-icon">✈</span>
+            <p>No flights found within your budget.<br>Try increasing your limit.</p>
+        </div>
+    </div>
+
+<script>
+function getCityCode(str) {
+    const match = str.match(/\(([^)]+)\)/);
+    return match ? match[1] : str.substring(0,3).toUpperCase();
+}
+
+function getCityName(str) {
+    return str.split(' (')[0];
+}
+
+function renderCards(flights) {
+    const grid = $('#flightGrid').empty();
+    $('#noResults').hide();
+
+    if (!flights.length) {
+        $('#noResults').show();
+        return;
+    }
+
+    flights.forEach((f, i) => {
+        const card = $(`
+            <div class="flight-card">
+                <div class="card-top">
+                    <div class="airline-info">
+                        <div class="airline-logo-wrap">
+                            <img class="airline-logo" src="${f.logo}" alt="${f.airline}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                            <span class="airline-initials">${f.airline.split(' ').map(w=>w[0]).join('').substring(0,3)}</span>
+                        </div>
+                        <div>
+                            <div class="airline-name">${f.airline}</div>
+                            <div class="flight-class">${f.class}</div>
+                        </div>
+                    </div>
+                    <div class="price-tag">
+                        <div class="price-amount">$${f.price}</div>
+                        <div class="price-label">per person</div>
+                    </div>
+                </div>
+
+                <div class="route">
+                    <div class="city">
+                        <div class="city-code">${getCityCode(f.origin)}</div>
+                        <div class="city-full">${getCityName(f.origin)}</div>
+                    </div>
+                    <div class="route-line">
+                        <div class="plane-svg">✈</div>
+                        <div class="route-dash"></div>
+                    </div>
+                    <div class="city dest">
+                        <div class="city-code">${getCityCode(f.destination)}</div>
+                        <div class="city-full">${getCityName(f.destination)}</div>
+                    </div>
+                </div>
+
+                <div class="flight-meta">
+                    <div class="meta-item">
+                        <div class="meta-val">${f.departure}</div>
+                        <div class="meta-key">Departs</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-val">${f.duration}</div>
+                        <div class="meta-key">Duration</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-val">${f.arrival}</div>
+                        <div class="meta-key">Arrives</div>
+                    </div>
+                </div>
+
+                <button class="book-btn">Select Flight →</button>
+            </div>
+        `);
+
+        grid.append(card);
+
+        setTimeout(() => card.addClass('visible'), i * 80);
+    });
+}
+
+function doSearch() {
+    const budget = parseFloat($('#budget').val());
+    if (!budget || budget <= 0) {
+        $('#budget').focus();
+        return;
+    }
+
+    $('#flightGrid').empty();
+    $('#noResults').hide();
+    $('#loadingSpinner').css('display','flex');
+    $('#resultsHeader').removeClass('visible');
+
+    $.ajax({
+        url: '/search',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ budget: budget }),
+        success: function(res) {
+            $('#loadingSpinner').hide();
+            $('#countBadge').text(res.count + ' found');
+            $('#resultsHeader').addClass('visible');
+            renderCards(res.flights);
+        },
+        error: function() {
+            $('#loadingSpinner').hide();
+            alert('Something went wrong. Please try again.');
+        }
+    });
+}
+
+// Sync slider <-> input
+$('#budgetRange').on('input', function() {
+    const val = $(this).val();
+    $('#budget').val(val);
+    const pct = (val / 600) * 100;
+    $(this).css('background', `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`);
+});
+
+$('#budget').on('input', function() {
+    const val = Math.min($(this).val(), 600);
+    $('#budgetRange').val(val);
+    const pct = (val / 600) * 100;
+    $('#budgetRange').css('background', `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`);
+});
+
+$('#searchBtn').on('click', doSearch);
+
+$('#budget').on('keypress', function(e) {
+    if (e.which === 13) doSearch();
+});
+</script>
+</body>
+</html>
